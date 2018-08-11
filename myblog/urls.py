@@ -18,11 +18,15 @@ from django.urls import path,include
 from django.conf.urls.static import static
 from django.conf import settings
 from blog.views import index
+from .views import login,register
 
 urlpatterns = [
     path('',index,name='index'),
     path('admin/', admin.site.urls),
     path('ckeditor/',include('ckeditor_uploader.urls')),
     path('blog/', include('blog.urls')),
+    path('login/',login,name='login'),
+    path('register/',register,name='register'),
+    path('comment/',include('comment.urls')),
 ]
 urlpatterns +=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

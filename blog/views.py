@@ -1,9 +1,11 @@
-from django.shortcuts import render_to_response,get_object_or_404
+from django.shortcuts import render_to_response,get_object_or_404,render
 from django.core.paginator import Paginator
-from django.db.models import Count
+from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
-from read_statistics.utils import read_statistics_once,get_7days_read_num
+from django.core.cache import cache
+from read_statistics.utils import *
 from .models import BlogType,Blog
+from comment.models import Comment
 
 def blog_list(request):
     all_blogs = Blog.objects.all()
@@ -14,6 +16,8 @@ def blog_list(request):
 def blog_detail(request,blog_pk):
     currentBlog = get_object_or_404(Blog, id=blog_pk)
     key = read_statistics_once(request,currentBlog)
+    blog_content_type = ContentType.objects.get_for_model(currentBlog)
+    comments = Comment.objects.filter(content_type= blog_content_type)
     context = {}
 
     previous_blog = Blog.objects.filter(create_time__gt=currentBlog.create_time).last()
@@ -21,7 +25,8 @@ def blog_detail(request,blog_pk):
     context['blog'] = currentBlog
     context['previous_blog']=previous_blog
     context['next_blog']=next_blog
-    response = render_to_response('blog_detail.html', context)
+    context['comments'] = comments
+    response = render(request,'blog_detail.html', context)
     response.set_cookie(key,'true')
     return response
 
@@ -35,10 +40,19 @@ def blog_with_type(request,blog_with_type):
 def index(request):
     blog_content_type = ContentType.objects.get_for_model(Blog)
     dates,read_nums = get_7days_read_num(blog_content_type)
+    today_hottest_blog = get_hottest_blog_By_day(blog_content_type)
+    yesterday_hottest_blog = get_yesterday_hottes_blog(blog_content_type)
+    weekly_hottest_blog = cache.get('weekly_hottest_blog')
+    if weekly_hottest_blog is None:
+        weekly_hottest_blog = weekly_hottest_blogs()
+        cache.set('weekly_hottest_blog',weekly_hottest_blog,3600)
     context = {}
     context['read_num'] = read_nums
     context['dates'] = dates
-    return render_to_response('index.html',context)
+    context['today_hottest_blog'] = today_hottest_blog
+    context['yesterday_hottest_blog'] = yesterday_hottest_blog
+    context['weekly_hottest_blog'] = weekly_hottest_blog
+    return render_to_response('index.html', context)
 
 def blog_with_date(request,year,month):
     all_blogs = Blog.objects.filter(create_time__year=year,create_time__month=month)
@@ -76,3 +90,9 @@ def get_common_blogs_data(request,all_blogs):
     context['page_list'] = page_list
     context['blogs_date'] = blogs_date_dict
     return context
+
+def weekly_hottest_blogs():
+    today = timezone.now().date()
+    date = today - datetime.timedelta(days=7)
+    blogs = Blog.objects.filter(read_details__date__lt=today,read_details__date__gte=date).values('id','title').annotate(sum=Sum('read_details__read_number')).order_by('-sum')
+    return blogs[:7]

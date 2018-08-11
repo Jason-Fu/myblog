@@ -11,3 +11,8 @@ div#container{
     min-height: 30em;
     max-height: 30em;
 }
+
+div.hot-blog {
+    text-align: center;
+    margin-top: 2em;
+}

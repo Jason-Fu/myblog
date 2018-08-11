@@ -29,3 +29,13 @@ def get_7days_read_num(content_type):
         read_num.append(result['sum'] or 0)
     return dates,read_num
 
+def get_hottest_blog_By_day(content_type):
+    today = timezone.now().date()
+    read_detail = ReadNumberByDay.objects.filter(content_type=content_type,date=today).order_by('-read_number')
+    return read_detail[:7]
+
+def get_yesterday_hottes_blog(content_type):
+    today = timezone.now().date()
+    yesterday = today - datetime.timedelta(days=1)
+    read_detail = ReadNumberByDay.objects.filter(content_type=content_type, date=yesterday).order_by('-read_number')
+    return read_detail[:7]
