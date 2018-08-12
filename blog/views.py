@@ -6,18 +6,19 @@ from django.core.cache import cache
 from read_statistics.utils import *
 from .models import BlogType,Blog
 from comment.models import Comment
+from comment.forms import CommentForm
 
 def blog_list(request):
     all_blogs = Blog.objects.all()
     context = get_common_blogs_data(request,all_blogs)
-    return render_to_response('blog_list.html',context)
+    return render(request,'blog_list.html',context)
 
 
 def blog_detail(request,blog_pk):
     currentBlog = get_object_or_404(Blog, id=blog_pk)
     key = read_statistics_once(request,currentBlog)
     blog_content_type = ContentType.objects.get_for_model(currentBlog)
-    comments = Comment.objects.filter(content_type= blog_content_type)
+    comments = Comment.objects.filter(content_type= blog_content_type,object_id=blog_pk,parent=None)
     context = {}
 
     previous_blog = Blog.objects.filter(create_time__gt=currentBlog.create_time).last()
@@ -25,7 +26,8 @@ def blog_detail(request,blog_pk):
     context['blog'] = currentBlog
     context['previous_blog']=previous_blog
     context['next_blog']=next_blog
-    context['comments'] = comments
+    context['comments'] = comments.order_by('-comment_time')
+    context['comment_form'] = CommentForm(initial={'content_type':blog_content_type.model,'object_id':blog_pk,'reply_comment_id':0 })
     response = render(request,'blog_detail.html', context)
     response.set_cookie(key,'true')
     return response
@@ -35,7 +37,7 @@ def blog_with_type(request,blog_with_type):
     all_blogs = Blog.objects.filter(blog_type=blog_type)
     context=get_common_blogs_data(request,all_blogs)
     context['blog_type'] = blog_type
-    return render_to_response('blog_with_type.html', context)
+    return render(request,'blog_with_type.html', context)
 
 def index(request):
     blog_content_type = ContentType.objects.get_for_model(Blog)
@@ -52,14 +54,14 @@ def index(request):
     context['today_hottest_blog'] = today_hottest_blog
     context['yesterday_hottest_blog'] = yesterday_hottest_blog
     context['weekly_hottest_blog'] = weekly_hottest_blog
-    return render_to_response('index.html', context)
+    return render(request,'index.html', context)
 
 def blog_with_date(request,year,month):
     all_blogs = Blog.objects.filter(create_time__year=year,create_time__month=month)
     context = get_common_blogs_data(request,all_blogs)
     context['blog_with_date'] = '%s年%s月' %(year,month)
     context['blogs'] = all_blogs
-    return render_to_response('blog_with_date.html', context)
+    return render(request,'blog_with_date.html', context)
 
 def get_common_blogs_data(request,all_blogs):
     p = Paginator(all_blogs, 4)
