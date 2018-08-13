@@ -18,7 +18,7 @@ from django.urls import path,include
 from django.conf.urls.static import static
 from django.conf import settings
 from blog.views import index
-from .views import login,register
+from .views import login,register,login_for_medal,logout,user_info
 
 urlpatterns = [
     path('',index,name='index'),
@@ -26,7 +26,11 @@ urlpatterns = [
     path('ckeditor/',include('ckeditor_uploader.urls')),
     path('blog/', include('blog.urls')),
     path('login/',login,name='login'),
+    path('logout/',logout,name='logout'),
+    path('user_info/',user_info,name='user_info'),
+    path('login_for_medal/',login_for_medal,name='login_for_medal'),
     path('register/',register,name='register'),
     path('comment/',include('comment.urls')),
+    path('likes/',include('likes.urls')),
 ]
 urlpatterns +=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

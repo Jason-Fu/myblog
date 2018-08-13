@@ -8,3 +8,6 @@ ul {
 li {
     margin-top: 5px;
 }
+ul.navbar-right {
+    margin-right: 0;
+}

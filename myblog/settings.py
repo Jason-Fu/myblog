@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'ckeditor_uploader',
     'read_statistics',
     'comment',
+    'likes',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -69,6 +71,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'myblog.context_processors.login_modal_form',
             ],
         },
     },
@@ -112,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -134,6 +137,7 @@ MEDIA_ROOT= os.path.join(BASE_DIR, 'media')
 #配置ckeditor
 CKEDITOR_UPLOAD_PATH='upload/'
 CKEDITOR_CONFIGS = {
+    'default': {},
     'comment_ckeditor':{
         'toolbar': 'custom',
         'toolbar_custom': [

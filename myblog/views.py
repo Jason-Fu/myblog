@@ -2,6 +2,9 @@ from django.contrib import auth
 from django.shortcuts import redirect,render
 from .forms import LoginForm,RegForm
 from django.contrib.auth.models import User
+from django.http import JsonResponse
+
+
 def login(request):
     if request.method == 'POST':
         login_form = LoginForm(request.POST)
@@ -14,6 +17,17 @@ def login(request):
     context = {}
     context['login_form'] = login_form
     return render(request, 'login.html', context)
+
+def login_for_medal(request):
+    login_form = LoginForm(request.POST)
+    data= {}
+    if login_form.is_valid():
+        user = login_form.cleaned_data['user']
+        auth.login(request, user)
+        data['status'] = 'SUCCESS'
+    else:
+        data['status'] = 'ERROR'
+    return JsonResponse(data)
 
 def register(request):
     if request.method == 'POST':
@@ -32,3 +46,11 @@ def register(request):
     context = {}
     context['reg_form'] = reg_form
     return render(request, 'register.html', context)
+
+def logout(request):
+    auth.logout(request)
+    return redirect(request.GET.get('from'), '/')
+
+def user_info(request):
+    context = {}
+    return render(request,'user_info.html',context)

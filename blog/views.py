@@ -1,12 +1,11 @@
-from django.shortcuts import render_to_response,get_object_or_404,render
+from django.shortcuts import get_object_or_404,render
 from django.core.paginator import Paginator
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from read_statistics.utils import *
 from .models import BlogType,Blog
-from comment.models import Comment
-from comment.forms import CommentForm
+from myblog.forms import LoginForm
 
 def blog_list(request):
     all_blogs = Blog.objects.all()
@@ -18,7 +17,7 @@ def blog_detail(request,blog_pk):
     currentBlog = get_object_or_404(Blog, id=blog_pk)
     key = read_statistics_once(request,currentBlog)
     blog_content_type = ContentType.objects.get_for_model(currentBlog)
-    comments = Comment.objects.filter(content_type= blog_content_type,object_id=blog_pk,parent=None)
+    #comments = Comment.objects.filter(content_type= blog_content_type,object_id=blog_pk,parent=None)
     context = {}
 
     previous_blog = Blog.objects.filter(create_time__gt=currentBlog.create_time).last()
@@ -26,8 +25,8 @@ def blog_detail(request,blog_pk):
     context['blog'] = currentBlog
     context['previous_blog']=previous_blog
     context['next_blog']=next_blog
-    context['comments'] = comments.order_by('-comment_time')
-    context['comment_form'] = CommentForm(initial={'content_type':blog_content_type.model,'object_id':blog_pk,'reply_comment_id':0 })
+    #context['comments'] = comments.order_by('-comment_time')
+    #context['comment_form'] = CommentForm(initial={'content_type':blog_content_type.model,'object_id':blog_pk,'reply_comment_id':0 })
     response = render(request,'blog_detail.html', context)
     response.set_cookie(key,'true')
     return response
